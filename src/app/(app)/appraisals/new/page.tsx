@@ -4,8 +4,8 @@ import { NewAppraisalForm } from "./form";
 export default async function NewAppraisalPage() {
   await requireUser();
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-4">
-      <h1 className="text-xl font-semibold">New appraisal</h1>
+    <div className="mx-auto max-w-lg">
+      <h1 className="mb-4 text-xl font-semibold">New appraisal</h1>
       <NewAppraisalForm />
     </div>
   );

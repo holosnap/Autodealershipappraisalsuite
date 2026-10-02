@@ -19,7 +19,10 @@
     "user:create": "tsx scripts/create-user.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1145.0",
+    "@aws-sdk/s3-request-presigner": "^3.1145.0",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "barcode-detector": "^3.2.2",
     "better-auth": "^1.7.7",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.3",
@@ -29,7 +32,8 @@
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "zxing-wasm": "^3.1.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

@@ -1,35 +1,69 @@
 import { z } from "zod";
+import { VIN_RE } from "@/lib/vin";
 
-const vin = z
+/** Empty string -> null (clears the column); omitted -> undefined (leaves it alone). */
+const text = (max = 200) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((v) => (v === "" ? null : v))
+    .nullable()
+    .optional();
+
+const int = (min: number, max: number) =>
+  z.preprocess(
+    (v) => (v === "" || v === null ? null : typeof v === "string" ? Number(v) : v),
+    z.number().int().min(min).max(max).nullable().optional(),
+  );
+
+export const vinField = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-HJ-NPR-Z0-9]{17}$/, "VIN must be 17 characters (no I, O or Q)");
+  .regex(VIN_RE, "VIN must be 17 characters (letters and digits, no I, O or Q)");
 
-const optionalText = z
-  .string()
-  .trim()
-  .transform((v) => (v === "" ? undefined : v))
-  .optional();
-
-export const createAppraisalSchema = z.object({
-  vin,
-  year: z.coerce.number().int().min(1981).max(new Date().getFullYear() + 1),
-  make: z.string().trim().min(1, "Make is required"),
-  model: z.string().trim().min(1, "Model is required"),
-  trim: optionalText,
-  odometer: z.coerce.number().int().min(0).max(2_000_000),
-  customerName: optionalText,
-  stockNumber: optionalText,
-  conditionNotes: optionalText,
+// Step 1
+export const vehicleStepSchema = z.object({
+  vin: vinField,
+  odometer: int(0, 2_000_000),
+  year: int(1981, new Date().getFullYear() + 1),
+  make: text(60),
+  model: text(80),
+  trim: text(80),
 });
-export type CreateAppraisalInput = z.infer<typeof createAppraisalSchema>;
+export type VehicleStep = z.infer<typeof vehicleStepSchema>;
+
+// Step 2
+export const customerStepSchema = z.object({
+  customerName: text(120),
+  customerPhone: text(40),
+  customerEmail: z
+    .string()
+    .trim()
+    .max(200)
+    .transform((v) => (v === "" ? null : v))
+    .pipe(z.string().email("Enter a valid email").nullable())
+    .optional(),
+  purchaseInterest: text(200),
+  stockNumber: text(40),
+  hasLien: z.boolean().optional(),
+});
+export type CustomerStep = z.infer<typeof customerStepSchema>;
+
+// Step 3 lives in ./condition.ts (conditionSchema) + keys, which maps to appraisals.keys_count.
+
+export const draftStepSchemas = { vehicle: vehicleStepSchema, customer: customerStepSchema } as const;
 
 export const decideAppraisalSchema = z
   .object({
     decision: z.enum(["approved", "rejected"]),
     offerDollars: z.coerce.number().positive().max(10_000_000).optional(),
-    reason: optionalText,
+    reason: z
+      .string()
+      .trim()
+      .transform((v) => (v === "" ? undefined : v))
+      .optional(),
   })
   .superRefine((v, ctx) => {
     if (v.decision === "approved" && v.offerDollars === undefined)

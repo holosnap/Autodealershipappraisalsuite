@@ -11,10 +11,19 @@ export function can(role: Role, action: Action): boolean {
   return permissions[role].has(action);
 }
 
-/** Salespeople see only their own appraisals; managers see all. */
+/**
+ * Salespeople see only their own appraisals; managers see everyone's submitted work.
+ * Drafts are private to their author (a half-finished intake is noise for the queue).
+ */
 export function canViewAppraisal(
   user: { id: string; role: Role },
-  appraisal: { createdBy: string },
+  appraisal: { createdBy: string; status: string },
 ): boolean {
-  return can(user.role, "appraisal:view_all") || appraisal.createdBy === user.id;
+  if (appraisal.createdBy === user.id) return true;
+  return can(user.role, "appraisal:view_all") && appraisal.status !== "draft";
+}
+
+/** Only the author can edit, and only while it is still a draft. */
+export function canEditDraft(user: { id: string }, appraisal: { createdBy: string; status: string }): boolean {
+  return appraisal.createdBy === user.id && appraisal.status === "draft";
 }

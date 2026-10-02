@@ -1,3 +1,4 @@
+import type { ConditionChecklist } from "@/features/appraisals/condition";
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
@@ -160,7 +161,11 @@ export const appraisals = pgTable(
     odometerUnit: text("odometer_unit").notNull().default("mi"),
     customerName: text("customer_name"),
     customerPhone: text("customer_phone"),
-    stockNumber: text("stock_number"),
+    customerEmail: text("customer_email"),
+    purchaseInterest: text("purchase_interest"), // what the customer is buying
+    stockNumber: text("stock_number"), // stock # of the vehicle they're buying
+    condition: jsonb("condition").$type<ConditionChecklist>(), // intake checklist (keys live in keys_count)
+    wizardStep: integer("wizard_step").notNull().default(1), // last intake step reached (draft resume)
     dealRef: text("deal_ref"),
     titleStatus: titleStatusEnum("title_status").notNull().default("unknown"),
     hasLien: boolean("has_lien").notNull().default(false),
