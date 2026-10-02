@@ -20,16 +20,12 @@ const timestamps = {
 };
 
 // ---------- enums ----------
-export const roleEnum = pgEnum("role", ["salesperson", "manager", "admin"]);
+export const roleEnum = pgEnum("role", ["salesperson", "manager"]);
 export const appraisalStatusEnum = pgEnum("appraisal_status", [
   "draft",
   "submitted",
-  "in_review",
-  "returned",
-  "offered",
-  "accepted",
-  "declined",
-  "expired",
+  "approved",
+  "rejected",
 ]);
 export const titleStatusEnum = pgEnum("title_status", [
   "clean",
@@ -159,7 +155,6 @@ export const appraisals = pgTable(
     createdBy: text("created_by")
       .notNull()
       .references(() => users.id),
-    assignedManagerId: text("assigned_manager_id").references(() => users.id),
     status: appraisalStatusEnum("status").notNull().default("draft"),
     odometer: integer("odometer"),
     odometerUnit: text("odometer_unit").notNull().default("mi"),
@@ -172,8 +167,7 @@ export const appraisals = pgTable(
     keysCount: integer("keys_count"),
     overallGrade: gradeEnum("overall_grade"),
     reconEstimateCents: integer("recon_estimate_cents"),
-    offerCents: integer("offer_cents"),
-    offerExpiresAt: timestamp("offer_expires_at", { withTimezone: true }),
+    offerCents: integer("offer_cents"), // final offer, set by a manager on approval
     decisionBy: text("decision_by").references(() => users.id),
     decidedAt: timestamp("decided_at", { withTimezone: true }),
     decisionReason: text("decision_reason"),
@@ -295,3 +289,6 @@ export const valuationsRelations = relations(valuationSnapshots, ({ one }) => ({
 }));
 
 export type Role = (typeof roleEnum.enumValues)[number];
+export const eventsRelations = relations(appraisalEvents, ({ one }) => ({
+  appraisal: one(appraisals, { fields: [appraisalEvents.appraisalId], references: [appraisals.id] }),
+}));

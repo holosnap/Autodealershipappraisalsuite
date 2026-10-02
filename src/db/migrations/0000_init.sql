@@ -1,9 +1,9 @@
-CREATE TYPE "public"."appraisal_status" AS ENUM('draft', 'submitted', 'in_review', 'returned', 'offered', 'accepted', 'declined', 'expired');--> statement-breakpoint
+CREATE TYPE "public"."appraisal_status" AS ENUM('draft', 'submitted', 'approved', 'rejected');--> statement-breakpoint
 CREATE TYPE "public"."overall_grade" AS ENUM('excellent', 'good', 'fair', 'poor');--> statement-breakpoint
 CREATE TYPE "public"."note_category" AS ENUM('exterior', 'interior', 'mechanical', 'tires_brakes', 'electrical', 'paint_body', 'history', 'general');--> statement-breakpoint
 CREATE TYPE "public"."photo_slot" AS ENUM('front', 'rear', 'driver_side', 'passenger_side', 'interior_front', 'interior_rear', 'odometer', 'vin_plate', 'engine', 'tires', 'damage', 'other');--> statement-breakpoint
 CREATE TYPE "public"."photo_status" AS ENUM('pending', 'uploaded');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('salesperson', 'manager', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('salesperson', 'manager');--> statement-breakpoint
 CREATE TYPE "public"."severity" AS ENUM('info', 'minor', 'moderate', 'major');--> statement-breakpoint
 CREATE TYPE "public"."title_status" AS ENUM('clean', 'rebuilt', 'salvage', 'lien', 'unknown');--> statement-breakpoint
 CREATE TYPE "public"."valuation_kind" AS ENUM('wholesale', 'retail', 'trade_in', 'market_avg', 'offer_basis');--> statement-breakpoint
@@ -55,7 +55,6 @@ CREATE TABLE "appraisals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"vehicle_id" uuid NOT NULL,
 	"created_by" text NOT NULL,
-	"assigned_manager_id" text,
 	"status" "appraisal_status" DEFAULT 'draft' NOT NULL,
 	"odometer" integer,
 	"odometer_unit" text DEFAULT 'mi' NOT NULL,
@@ -69,7 +68,6 @@ CREATE TABLE "appraisals" (
 	"overall_grade" "overall_grade",
 	"recon_estimate_cents" integer,
 	"offer_cents" integer,
-	"offer_expires_at" timestamp with time zone,
 	"decision_by" text,
 	"decided_at" timestamp with time zone,
 	"decision_reason" text,
@@ -170,7 +168,6 @@ ALTER TABLE "appraisal_photos" ADD CONSTRAINT "appraisal_photos_appraisal_id_app
 ALTER TABLE "appraisal_photos" ADD CONSTRAINT "appraisal_photos_uploaded_by_users_id_fk" FOREIGN KEY ("uploaded_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appraisals" ADD CONSTRAINT "appraisals_vehicle_id_vehicles_id_fk" FOREIGN KEY ("vehicle_id") REFERENCES "public"."vehicles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appraisals" ADD CONSTRAINT "appraisals_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "appraisals" ADD CONSTRAINT "appraisals_assigned_manager_id_users_id_fk" FOREIGN KEY ("assigned_manager_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appraisals" ADD CONSTRAINT "appraisals_decision_by_users_id_fk" FOREIGN KEY ("decision_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "condition_notes" ADD CONSTRAINT "condition_notes_appraisal_id_appraisals_id_fk" FOREIGN KEY ("appraisal_id") REFERENCES "public"."appraisals"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "condition_notes" ADD CONSTRAINT "condition_notes_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

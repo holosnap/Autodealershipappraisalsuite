@@ -1,23 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { can, canEditAppraisal } from "../src/lib/rbac";
+import { can, canViewAppraisal } from "../src/lib/rbac";
 
 describe("rbac", () => {
-  it("limits salespeople", () => {
+  it("salesperson can create but not decide or view all", () => {
     expect(can("salesperson", "appraisal:create")).toBe(true);
-    expect(can("salesperson", "offer:set")).toBe(false);
+    expect(can("salesperson", "appraisal:decide")).toBe(false);
     expect(can("salesperson", "appraisal:view_all")).toBe(false);
   });
-  it("lets managers review but not manage users", () => {
-    expect(can("manager", "offer:set")).toBe(true);
-    expect(can("manager", "user:manage")).toBe(false);
-    expect(can("admin", "user:manage")).toBe(true);
+  it("manager can view all and decide", () => {
+    expect(can("manager", "appraisal:view_all")).toBe(true);
+    expect(can("manager", "appraisal:decide")).toBe(true);
   });
-  it("salesperson edits only own draft/returned appraisals", () => {
+  it("salesperson views only their own appraisals", () => {
     const sp = { id: "u1", role: "salesperson" as const };
-    expect(canEditAppraisal(sp, { createdBy: "u1", status: "draft" })).toBe(true);
-    expect(canEditAppraisal(sp, { createdBy: "u1", status: "returned" })).toBe(true);
-    expect(canEditAppraisal(sp, { createdBy: "u1", status: "submitted" })).toBe(false);
-    expect(canEditAppraisal(sp, { createdBy: "u2", status: "draft" })).toBe(false);
-    expect(canEditAppraisal({ id: "m", role: "manager" }, { createdBy: "u2", status: "submitted" })).toBe(true);
+    expect(canViewAppraisal(sp, { createdBy: "u1" })).toBe(true);
+    expect(canViewAppraisal(sp, { createdBy: "u2" })).toBe(false);
+    expect(canViewAppraisal({ id: "m", role: "manager" }, { createdBy: "u2" })).toBe(true);
   });
 });
